@@ -1,0 +1,25 @@
+<!doctype html>
+
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <title>WASM memory test</title>
+  </head>
+
+  <body>
+    <script src="../wasm-utils.js"></script>
+    <script>
+      var memory = new WebAssembly.Memory({initial:10, maximum:100});
+      fetchAndInstantiate('memory.wasm', { js: { mem: memory } }).then(instance => {
+        var i32 = new Uint32Array(memory.buffer);
+        for (var i = 0; i < 10; i++) {
+          i32[i] = 5;
+        }
+        var sum = instance.exports.accumulate(0, 10);
+        console.log(sum,i32);
+      });
+    </script>
+  </body>
+
+</html>

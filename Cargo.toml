@@ -1,0 +1,19 @@
+[package]
+name = "conrod_webgl"
+version = "1.0.0"
+authors = ["Alan Poon <brightshadowx@gmail.com>"]
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+conrod={path="../rust-ios-android/conrod",features = ["gfx_rs"]}
+serde_derive = "^1.0.21"
+serde = "^1.0.21"
+serde_json = "^1.0.6"
+
+[features]
+default = []
+
+[patch.crates-io]
+rand = { git = "https://github.com/aochagavia/rand.git", branch = "wasm" }
