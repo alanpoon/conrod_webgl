@@ -2,10 +2,11 @@
 import $ from "jquery";
 /* JavaScript Imports */
 import { load_wasm_module, native_support } from "./modules";
-import { WasmModule } from "./modules";
+import { WasmModule,Memory } from "./modules";
 import { ImageMemory } from "./image_memory";
 import { Conrod } from "./conrod.js";
 import {VertexArray} from "./vertex_array.js";
+import {draw,pre_draw,initBuffers,draw_scene} from "./draw.js";
 /* CSS Imports */
 
 /* Image Imports */
@@ -45,13 +46,28 @@ const file2image_data = (file) => (
         reader.readAsDataURL(file);
     })
 );
+  function allocStr(mem,str) {
+            const buf = Buffer.from(str);
+            const ptr = WasmModule.exports.alloc(buf.length + 1);
+            mem.set(buf, ptr);
+            mem[buf.length] = 0; // write null byte
+            return ptr;
+        }
 
+    function copyCStr(mem, ptr) {
+            let end = ptr;
+            while (mem[end] !== 0) {
+                end++;
+        }
+        return Buffer.from(mem.buffer, ptr, end-ptr).toString();
+    }
 
 $(document).ready(() => {
     const canvas = document.getElementById("image_canvas");
 
     /* Load the default image. */
     load_wasm_module().then(() => {
+        console.log("hi2");
         return filepath2image_data(default_image_filepath);
     }).then((default_image_data) => {
         let wasm_image_memory = null;
@@ -60,64 +76,13 @@ $(document).ready(() => {
                 if (wasm_image_memory) { wasm_image_memory.free(); }
                 wasm_image_memory = new ImageMemory(new_image_data, WasmModule);
               //  draw_image_data(wasm_image_memory.get_image_data(), canvas);
-              var heap = new Uint8Array(WasmModule.memory.buffer);
 
-function allocStr(mem, str) {
-  const buf = Buffer.from(str);
-  const ptr = WasmModule.cwrap("alloc","number",["number"])(buf.length + 1);
-  heap.set(buf, ptr);
-  heap[buf.length] = 0; // write null byte
-  return ptr;
-}
-
-function copyCStr(mem, ptr) {
-  let end = ptr;
-  while (mem[end] !== 0) {
-    end++;
-  }
-
-  return Buffer.from(mem.buffer, ptr, end-ptr).toString();
-}
-
-              vertex_data = new VertexArray();
-              var datajson = JSON.stringify(vertex_data.data);
-              var dataptr = allocStr(heap,datajson);
-              var datajson2= copyCStr(heap, dataptr);
-              WasmModule.cwrap("dealloc","number",["number","number"])(dataptr);
-              var data_r= JSON.parse(datajson2);
-              console.log(data_r);
-function createShader(gl, type, source) {
-  var shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-  if (success) {
-    return shader;
-  }
-
-  console.log(gl.getShaderInfoLog(shader));
-  gl.deleteShader(shader);
-}
-
-function createProgram(gl, vertexShader, fragmentShader) {
-  var program = gl.createProgram();
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  var success = gl.getProgramParameter(program, gl.LINK_STATUS);
-  if (success) {
-    return program;
-  }
-
-  console.log(gl.getProgramInfoLog(program));
-  gl.deleteProgram(program);
-}
-                var canvas = document.getElementById("c");
-                var gl = canvas.getContext("webgl");
-                if (!gl) {
-                    return;
-                }
-                
+            var canvas = document.getElementById("c");
+            var gl = canvas.getContext("webgl");
+            if (!gl) {
+                return;
+            }
+            
               let start = null;
             let prevTimestamp = null;
             let con_container=   new Conrod(wasm_image_memory);
@@ -135,8 +100,56 @@ function createProgram(gl, vertexShader, fragmentShader) {
             }
           
         };
-  
+         var heap = new Uint8Array(WasmModule.exports.memory.buffer);
 
+      
+       
+             
+            const person = {
+            firstName: 'foo',
+            lastName: 'bar',
+            };
+            const personJson = JSON.stringify(person);
+
+        /*    const personPtr = allocStr(heap, personJson);
+            console.log("personPtr",personPtr);
+            const testPtr = allocStr(heap, "asd");
+            console.log("testPtr",testPtr);
+            const greetingPtr = WasmModule.exports.hello(personPtr);
+            WasmModule.exports.dealloc(personPtr);
+
+            const greetingJson = copyCStr(heap, greetingPtr);
+            WasmModule.exports.dealloc(greetingPtr);
+            const { message,array } = JSON.parse(greetingJson);
+            console.log(message);
+            console.log("array",array);
+            */
+             const dataptr = WasmModule.exports.vertex_populate();
+             const dataJson = copyCStr(heap, dataptr);
+             WasmModule.exports.dealloc(dataptr);
+             const data = JSON.parse(dataJson);
+             console.log("data",data);
+      //  draw("image_canvas",data);
+        var canvas = document.getElementById("image_canvas");
+        var gl = canvas.getContext("webgl2");
+        if (!gl) {
+            return;
+        }
+      const program =pre_draw(gl);
+      const programInfo = {
+        program: program,
+        attribLocations: {
+        vertexPosition: gl.getAttribLocation(program, 'a_Pos'),
+        vertexUv:gl.getAttribLocation(program,'a_Uv'),
+        vertexColor: gl.getAttribLocation(program, 'a_Color'),
+        vertexMode: gl.getAttribLocation(program, 'a_Mode'),
+        },
+        uniformLocations: {
+        color2D: gl.getUniformLocation(program, 't_Color'),
+        },
+    };
+    const buffer = initBuffers(gl,data);
+      draw_scene(gl,buffer,programInfo);
         function u(){
 
         };

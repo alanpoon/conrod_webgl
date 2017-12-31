@@ -4,3 +4,4 @@ Cargo.lock
 html/dist
 html/node_modules
 **/*.wasm
+ans.txt

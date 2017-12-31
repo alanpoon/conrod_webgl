@@ -4,7 +4,7 @@ let create = () => { };
 
 const load_wasm_exports = () => {
     loaded = true;
-    create = WasmModule.cwrap("vertex_populate", "number", [ "number", "number"]);
+    create = WasmModule.exports.vertex_populate;
 };
 export class VertexArray {
      constructor() {
