@@ -1,29 +1,4 @@
-function createShader(gl, type, source) {
-    var shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-    var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-    if (success) {
-        return shader;
-    }
 
-    console.log(gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-}
-
-  function createProgram(gl, vertexShader, fragmentShader) {
-      var program = gl.createProgram();
-      gl.attachShader(program, vertexShader);
-      gl.attachShader(program, fragmentShader);
-      gl.linkProgram(program);
-      var success = gl.getProgramParameter(program, gl.LINK_STATUS);
-      if (success) {
-          return program;
-      }
-
-      console.log(gl.getProgramInfoLog(program));
-      gl.deleteProgram(program);
-  }
 function draw(canva,positions){
     // Get A WebGL context
   var canvas = document.getElementById(canva);
@@ -36,12 +11,8 @@ function draw(canva,positions){
   var vertexShaderSource = document.getElementById("2d-vertex-shader").text;
   var fragmentShaderSource = document.getElementById("2d-fragment-shader").text;
 
-  // create GLSL shaders, upload the GLSL source, compile the shaders
-  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-
   // Link the two shaders into a program
-  var program = createProgram(gl, vertexShader, fragmentShader);
+  var program = webglUtils.createProgramFromSources(gl, [vertexShaderSource, fragmentShaderSource]);
 
   // look up where the vertex data needs to go.
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
@@ -94,10 +65,9 @@ function pre_draw(gl){
   var vertexShaderSource = document.getElementById("2d-vertex-shader-new").text;
   var fragmentShaderSource = document.getElementById("2d-fragment-shader-new").text;
     // create GLSL shaders, upload the GLSL source, compile the shaders
-  var vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
-  var fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
-  // Link the two shaders into a program
-  return createProgram(gl, vertexShader, fragmentShader);
+  var program = webglUtils.createProgramFromSources(gl, [vertexShaderSource, fragmentShaderSource]);  // Link the two shaders into a program
+  gl.linkProgram(program);
+  return program;
 }
  const person = {
             firstName: 'foo',
@@ -126,19 +96,18 @@ function pre_draw(gl){
     mode:modeBuffer
   };
   }       
-function draw_scene(gl,buffer,programInfo){
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);  // Clear to black, fully opaque
-  gl.clearDepth(1.0);                 // Clear everything
-  gl.enable(gl.DEPTH_TEST);           // Enable depth testing
-  gl.depthFunc(gl.LEQUAL);            // Near things obscure far things
+function draw_scene(gl,buffer,programInfo,vao,program){
+    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+   
+    gl.bindVertexArray(vao);
+    
 
-    // Clear the canvas before we start drawing on it.
-
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 {  
   // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
   var size = 2;          // 2 components per iteration
-  var type = gl.UINT;   // the data is 32bit floats
+  var type = gl.FLOAT;   // the data is 32bit floats
   var normalize = false; // don't normalize the data
   var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
   var offset = 0;        // start at the beginning of the buffer
@@ -170,30 +139,8 @@ function draw_scene(gl,buffer,programInfo){
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer.color);
 }
 {
- var size = 4;          // 2 components per iteration
-  var type = gl.FLOAT;   // the data is 32bit floats
-  var normalize = false; // don't normalize the data
-  var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-  var offset = 0;        // start at the beginning of the buffer
-  gl.vertexAttribPointer(
-      programInfo.attribLocations.vertexColor, size, type, normalize, stride, offset);
-  // Bind the position buffer.
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer.color);
-}
-{
- var size = 4;          // 2 components per iteration
-  var type = gl.FLOAT;   // the data is 32bit floats
-  var normalize = false; // don't normalize the data
-  var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
-  var offset = 0;        // start at the beginning of the buffer
-  gl.vertexAttribPointer(
-      programInfo.attribLocations.vertexColor, size, type, normalize, stride, offset);
-  // Bind the position buffer.
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer.color);
-}
-{
- var size = 1;          // 2 components per iteration
-  var type = gl.FLOAT;   // the data is 32bit floats
+ var size = 1;          // 1 components per iteration
+  var type = gl.UNSIGNED_INT;   // the data is 32bit ints
   var normalize = false; // don't normalize the data
   var stride = 0;        // 0 = move forward size * sizeof(type) each iteration to get the next position
   var offset = 0;        // start at the beginning of the buffer
@@ -202,10 +149,12 @@ function draw_scene(gl,buffer,programInfo){
   // Bind the position buffer.
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer.mode);
 }
+ 
+    gl.useProgram(program);
   // draw
-  var primitiveType = gl.TRIANGLE_STRIP;
+  var primitiveType = gl.TRIANGLE;
   var offset = 0;
-  var count = 4;
+  var count = 7;
   gl.drawArrays(primitiveType, offset, count);
 }
 export {draw,pre_draw,initBuffers,draw_scene};

@@ -4,9 +4,9 @@
   "description": "",
   "main": "webpack.config.js",
   "scripts": {
-        "start": "webpack-dev-server --hot",
-        "loc": "sloc src/",
-        "web": "webpack"
+    "start": "webpack-dev-server --hot",
+    "loc": "sloc src/",
+    "web": "webpack"
   },
   "author": "alanpoon",
   "license": "ISC",

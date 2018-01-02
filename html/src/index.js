@@ -6,7 +6,10 @@ import { WasmModule,Memory } from "./modules";
 import { ImageMemory } from "./image_memory";
 import { Conrod } from "./conrod.js";
 import {VertexArray} from "./vertex_array.js";
-import {draw,pre_draw,initBuffers,draw_scene} from "./draw.js";
+//import {draw,pre_draw,initBuffers,draw_scene} from "./draw.js";
+//import {main2} from "./draw2.js";
+//import {main2b} from "./draw2b.js";
+import {main3} from "./draw3.js";
 /* CSS Imports */
 
 /* Image Imports */
@@ -102,9 +105,6 @@ $(document).ready(() => {
         };
          var heap = new Uint8Array(WasmModule.exports.memory.buffer);
 
-      
-       
-             
             const person = {
             firstName: 'foo',
             lastName: 'bar',
@@ -130,12 +130,16 @@ $(document).ready(() => {
              const data = JSON.parse(dataJson);
              console.log("data",data);
       //  draw("image_canvas",data);
-        var canvas = document.getElementById("image_canvas");
+    /*     var canvas = document.getElementById("image_canvas");
         var gl = canvas.getContext("webgl2");
         if (!gl) {
             return;
         }
-      const program =pre_draw(gl);
+     const program =pre_draw(gl);
+        // Tell it to use our program (pair of shaders)
+      gl.useProgram(program);
+      var vao = gl.createVertexArray();
+      gl.bindVertexArray(vao);
       const programInfo = {
         program: program,
         attribLocations: {
@@ -148,8 +152,11 @@ $(document).ready(() => {
         color2D: gl.getUniformLocation(program, 't_Color'),
         },
     };
-    const buffer = initBuffers(gl,data);
-      draw_scene(gl,buffer,programInfo);
+    */
+    //const buffer = initBuffers(gl,data);
+      //draw_scene(gl,buffer,programInfo,vao);
+      //main2();
+      main3();
         function u(){
 
         };
